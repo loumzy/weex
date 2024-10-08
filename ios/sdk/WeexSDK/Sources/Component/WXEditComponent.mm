@@ -127,6 +127,14 @@ WX_EXPORT_METHOD(@selector(setTextFormatter:))
         if (attributes[@"maxlength"]) {
             _maxLength = [NSNumber numberWithUnsignedInteger:[attributes[@"maxlength"] integerValue]];
         }
+
+        /*
+         maxlength=5, but set the default value to 12 lengths. Before the 5th character, pasting 10 characters directly will result in As a result, the length of leftLength=17 is larger than the position of the cursor and larger than maxleng, and the extra characters need to be filtered.
+         */
+        if (_maxLength && [_value length] > [_maxLength integerValue]&& [_maxLength integerValue] >= 0) {
+            _value = [_value substringToIndex:([_maxLength integerValue])];
+        }
+
         if (attributes[@"returnKeyType"]) {
             _returnKeyType = [WXConvert UIReturnKeyType:attributes[@"returnKeyType"]];
         }
@@ -640,6 +648,8 @@ WX_EXPORT_METHOD(@selector(setTextFormatter:))
     {
         [[[UIApplication sharedApplication] keyWindow] endEditing:YES];
         _changeEventString = [textField text];
+        //Fix the problem that the date display time is incorrect after the initial value of the date is reset when the input tag type is date|time
+        [_datePickerManager updateDatePicker:@{@"value":_changeEventString,@"type":_inputType}];
         [_datePickerManager show];
         return NO;
     }
